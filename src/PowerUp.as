@@ -14,6 +14,15 @@ package
 			velocity.x = vel;
 		}
 		
+		override public function update():void
+		{
+			var screenXPos:Number = getScreenXY().x;
+			if (screenXPos < 0)
+			{
+			}
+			super.update();
+		}
+		
 	}
 
 }

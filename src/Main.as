@@ -1,9 +1,10 @@
 package 
 {
+	import flash.net.SharedObject;
 	import org.flixel.*;
 	
 	[SWF(width="600", height="120", backgroundColor="#967F6B")]
-    [Frame(factoryClass="Preloader")]
+    [Frame(factoryClass = "Preloader")]
 	
 	public class Main extends FlxGame
 	{

@@ -1,5 +1,6 @@
 package  
 {
+	import flash.net.SharedObject;
 	import org.flixel.*;
 	
 	public class Player extends FlxSprite
@@ -17,9 +18,13 @@ package
 		private var InitHeight:Number;
 		private var tempY:Number;
 		
+		private var _save:FlxSave;
+		
 		public var jump:Number;
 		public var didAction: Boolean = false;
 		public var onWall: Boolean = false;
+		
+		public var so:SharedObject;
 		
 		public function Player()
 		{

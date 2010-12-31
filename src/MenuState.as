@@ -13,9 +13,20 @@ package
 		[Embed(source = '../assets/powerup_orange.png')]
 		private var ImgPwrUp:Class;
 		
-		private var PwrUpSprite:FlxSprite;
+		[Embed(source = '../assets/yes_sound.png')]
+		private var ImgSnd:Class;
+		[Embed(source = '../assets/no_sound.png')]
+		private var ImgMute:Class;
 		
+		private var PwrUpSprite:FlxSprite;
 		private var BtnSprite:FlxSprite;
+		private var SpriteMute:FlxSprite;
+		private var SpriteSnd:FlxSprite;
+		
+		private var BlinkTimer:Number = 0;
+		private var BlinkInterval:Number = 0.25;
+		
+		private var BtnSound:FlxButton;
 		
 		private var title:FlxText;
 		private var information:FlxText;
@@ -25,6 +36,8 @@ package
 		override public function create():void
 		{
 			FlxG.mouse.show();
+			
+			BlinkTimer = BlinkInterval;
 			
 			bgColor = 0x967F6B;
 			
@@ -45,6 +58,12 @@ package
 			add(instructions);
 			
 			BtnSprite = new FlxSprite(0, 0, ImgBtn);
+			SpriteSnd = new FlxSprite(0, 0, ImgSnd);
+			SpriteMute = new FlxSprite(280, 2, ImgMute);
+			
+			BtnSound = new FlxButton(280, 2, handleSound);
+			BtnSound.loadGraphic(SpriteSnd);
+			add(BtnSound);
 			
 			instructionsBtn = new FlxButton(110, 20, playGame);
 			instructionsBtn.loadText(instructions);
@@ -57,7 +76,46 @@ package
 		
 		override public function update():void
 		{
+			BlinkTimer -= FlxG.elapsed;
+			
+			if (BlinkTimer < 0)
+			{
+				
+				if (instructions.color != bgColor)
+				{
+					instructions.color = bgColor;
+					BlinkTimer = BlinkInterval;
+				}
+				else
+				{
+					instructions.color = 0xCC9241;
+					BlinkTimer = BlinkInterval * 4;
+				}
+				
+			}
+			
+			if (FlxG.volume == 0.0)
+			{
+				BtnSound.loadGraphic(SpriteMute);
+			}
+			else
+			{
+				BtnSound.loadGraphic(SpriteSnd);
+			}
+			
 			super.update();
+		}
+		
+		private function handleSound():void
+		{
+			if (FlxG.volume == 0.0)
+			{
+				FlxG.volume = 1.0;
+			}
+			else
+			{
+				FlxG.volume = 0.0;
+			}
 		}
 		
 		private function playGame():void

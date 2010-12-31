@@ -12,6 +12,15 @@ package
 		
 		[Embed(source = '../assets/boulder.png')]
 		private var _ImgBoulder:Class;
+		[Embed(source = '../assets/yes_sound.png')]
+		private var ImgSnd:Class;
+		[Embed(source = '../assets/no_sound.png')]
+		private var ImgMute:Class;
+		
+		private var SpriteMute:FlxSprite;
+		private var SpriteSnd:FlxSprite;
+		
+		private var BtnSound:FlxButton;
 		
 		private var _Boulder:FlxSprite;
 		
@@ -87,6 +96,13 @@ package
 			add(_traps);
 			_powerup = new FlxGroup();
 			add(_powerup);
+			
+			SpriteSnd = new FlxSprite(0, 0, ImgSnd);
+			SpriteMute = new FlxSprite(280, 2, ImgMute);
+			BtnSound = new FlxButton(280, 2, handleSound);
+			BtnSound.loadGraphic(SpriteSnd);
+			add(BtnSound);
+			
 			_player = new Player();
 			add(_player);
 			
@@ -101,6 +117,15 @@ package
 		
 		override public function update():void
 		{
+			if (FlxG.volume == 0.0)
+			{
+				BtnSound.loadGraphic(SpriteMute);
+			}
+			else
+			{
+				BtnSound.loadGraphic(SpriteSnd);
+			}
+			
 			//Increase the score
 			if (!_player.dead)
 			{
@@ -190,6 +215,18 @@ package
 				so.data["hiscore"] = FlxG.score;
 				so.flush();
 				_highscoreText.text = "HIGH SCORE: " + FlxG.score;
+			}
+		}
+		
+		private function handleSound():void
+		{
+			if (FlxG.volume == 0.0)
+			{
+				FlxG.volume = 1.0;
+			}
+			else
+			{
+				FlxG.volume = 0.0;
 			}
 		}
 		

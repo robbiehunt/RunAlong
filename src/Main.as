@@ -12,6 +12,7 @@ package
 		public function Main():void 
 		{
 			super(300, 60, MenuState, 2);
+			this.pause = new PauseScreen();
 		}
 		
 	}

@@ -41,16 +41,16 @@ package
 			
 			bgColor = 0x967F6B;
 			
-			title = new FlxText(0, 0, FlxG.width, "Run Along, Now");
+			title = new FlxText(0, 40, FlxG.width, "Run Along, Now");
 			title.setFormat(null, 16, 0x7A604B, "center");
 			add(title);
 			
 			
-			information = new FlxText(0, 48, 300, "[Z]:Jump [X]:Slide   Collect:       Don't hit the Walls or Spikes!");
+			information = new FlxText(0, 108, 300, "[Z]:Slide [X]:Jump   Collect:       Don't hit the Walls or Spikes!");
 			information.setFormat(null, 8, 0xCC9241, "left");
 			add(information);
 			
-			PwrUpSprite = new FlxSprite(135, 50, ImgPwrUp);
+			PwrUpSprite = new FlxSprite(135, 110, ImgPwrUp);
 			add(PwrUpSprite);
 			
 			instructions = new FlxText(0, 0, 70, "Click To Play");
@@ -65,7 +65,7 @@ package
 			BtnSound.loadGraphic(SpriteSnd);
 			add(BtnSound);
 			
-			instructionsBtn = new FlxButton(110, 20, playGame);
+			instructionsBtn = new FlxButton(110, 60, playGame);
 			instructionsBtn.loadText(instructions);
 			instructionsBtn.loadGraphic(BtnSprite);
 			instructionsBtn.width = 70;

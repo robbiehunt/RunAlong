@@ -47,13 +47,19 @@ package
 			velocity.x = 0;
 			x = 10;
 			
-			if (FlxG.keys.justPressed("X"))
+			if (FlxG.keys.justPressed("X") && !FlxG.keys.Z)
 			{
-				FlxG.play(SndJump);
+				if (didAction == false)
+				{
+					FlxG.play(SndJump);
+				}
 			}
 			if (FlxG.keys.justPressed("Z"))
 			{
-				FlxG.play(SndSlide);
+				if (didAction == false)
+				{
+					FlxG.play(SndSlide);
+				}
 			}
 			
 			//slide

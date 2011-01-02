@@ -19,6 +19,7 @@ package
 			{
 				case "spikeStrip":
 					ObImg = ImgSpikeStrip;
+					height = 5;
 				break;
 				case "hangSpike":
 					ObImg = ImgHangSpike;
@@ -33,9 +34,13 @@ package
 		{
 			super.update();
 			
-			if ((x <= 50) && (_type == "hangSpike"))
+			if ((x <= 110) && (_type == "hangSpike"))
 			{
 				velocity.y = 140;
+			}
+			if ((_type == "hangSpike") && (y > 73))
+			{
+				y = 74;
 			}
 		}
 		

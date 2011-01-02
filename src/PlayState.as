@@ -17,6 +17,14 @@ package
 		[Embed(source = '../assets/no_sound.png')]
 		private var ImgMute:Class;
 		
+		private var difficulty:Number = 0;
+		private var firstSpikes:Boolean = true;
+		private var firstSlide:Boolean = true;
+		private var firstJump:Boolean = true;
+		private var spikeTimer:Number;
+		private var slideTimer:Number;
+		private var jumpTimer:Number;
+		
 		private var SpriteMute:FlxSprite;
 		private var SpriteSnd:FlxSprite;
 		
@@ -46,8 +54,10 @@ package
 		
 		private var _scoreText:FlxText;
 		private var _multiplierText:FlxText;
+		private var _multiplierBlurb:FlxText;
 		private var _gameOverText:FlxText;
 		private var _highscoreText:FlxText;
+		private var slideText:FlxText;
 		
 		public var so:SharedObject;
 		
@@ -55,15 +65,15 @@ package
 		{
 			/*Background*/
 			bgColor = 0x967F6B;
-			_Background1 = new BGTile(0, 0, -80);
+			_Background1 = new BGTile(0, -20, -80);
 			add(_Background1);
-			_Background2 = new BGTile(FlxG.width, 0, -80);
+			_Background2 = new BGTile(FlxG.width, -20, -80);
 			add(_Background2);
 			
 			/*Floor*/
-			_Floor1 = new Floor(0, 50, -200);
+			_Floor1 = new Floor(0, 90, -200);
 			add(_Floor1);
-			_Floor2 = new Floor(FlxG.width, 50, -200);
+			_Floor2 = new Floor(FlxG.width, 90, -200);
 			add(_Floor2);
 			_floor = new FlxGroup();
 			_floor.add(_Floor1);
@@ -71,15 +81,18 @@ package
 			
 			/*HUD TEXT*/
 			FlxG.score = 0;
-			_scoreText = new FlxText(2, 2, 140, "Score: 0");
-			_scoreText.setFormat(null, 16, 0x7A604B, "left");
+			_scoreText = new FlxText(2, 98, 150, "Score: 0");
+			_scoreText.setFormat(null, 8, 0x7A604B, "left");
 			add(_scoreText);
 			
 			_multiplier = 1;
 			_multiTimer = _multiTimerInit;
-			_multiplierText = new FlxText(7, 18, 100, "[x1]");
-			_multiplierText.setFormat(null, 16, 0x7A604B, "left");
+			_multiplierText = new FlxText(160, 108, 100, "[x1]");
+			_multiplierText.setFormat(null, 8, 0x7A604B, "left");
 			add(_multiplierText);
+			_multiplierBlurb = new FlxText(150, 98, 100, "Multiplier:");
+			_multiplierBlurb.setFormat(null, 8, 0x7A604B, "left");
+			add(_multiplierBlurb);
 			
 			_gameOverText = new FlxText(0, 0, FlxG.width, " ");
 			_gameOverText.setFormat(null, 8, 0xCC9241, "left");
@@ -88,6 +101,10 @@ package
 			_highscoreText = new FlxText(130, 0, 300, " ");
 			_highscoreText.setFormat(null, 8, 0xCC9241, "left");
 			add(_highscoreText);
+			
+			slideText = new FlxText(100, 55, 200, " ");
+			slideText.setFormat(null, 16, 0xCC9241, "left");
+			add(slideText);
 			
 			/*Game Objects*/
 			_walls = new FlxGroup();
@@ -107,7 +124,7 @@ package
 			add(_player);
 			
 			/* Boulder */
-			_Boulder = new FlxSprite( -20, 20, _ImgBoulder);
+			_Boulder = new FlxSprite( -20, 60, _ImgBoulder);
 			add(_Boulder);
 			
 			resetObstacleTimer();
@@ -124,6 +141,47 @@ package
 			else
 			{
 				BtnSound.loadGraphic(SpriteSnd);
+			}
+			
+			if (FlxG.score > 5000)
+			{
+				difficulty = 3;
+			}
+			else if (FlxG.score > 3000)
+			{
+				difficulty = 2;
+			}
+			else if (FlxG.score > 1500)
+			{
+				difficulty = 1;
+			}
+			
+			if (firstSpikes)
+			{
+				spikeTimer -= FlxG.elapsed;
+				if (spikeTimer < 0)
+				{
+					slideText.text = " ";
+					firstSpikes = false;
+				}
+			}
+			if (firstSlide)
+			{
+				slideTimer -= FlxG.elapsed;
+				if (slideTimer < 0)
+				{
+					slideText.text = " ";
+					firstSlide = false;
+				}
+			}
+			if (firstJump)
+			{
+				jumpTimer -= FlxG.elapsed;
+				if (jumpTimer < 0)
+				{
+					slideText.text = " ";
+					firstJump = false;
+				}
 			}
 			
 			//Increase the score
@@ -173,14 +231,15 @@ package
 			/*Player Death*/
 			if (_player.dead)
 			{
-				_gameOverText.text = "GAME OVER  SCORE: " + FlxG.score +"\nPRESS ENTER TO PLAY AGAIN";
+				_gameOverText.text = "GAME OVER  SCORE: " + FlxG.score +"\nPRESS [SPACE] TO PLAY AGAIN";
 				
 				handleHighScore();
 				
 				_scoreText.text = " ";
 				_multiplierText.text = " ";
+				_multiplierBlurb.text = " ";
 				
-				if (FlxG.keys.ENTER)
+				if ((FlxG.keys.SPACE))
 				{
 					FlxG.state = new PlayState();
 				}
@@ -232,21 +291,41 @@ package
 		
 		private function populateLevel():void
 		{
-			var r : Number = Math.round(Math.random() * 9) + 1;
+			var r: Number;
+			
+			if (difficulty > 0)
+			{
+				r = Math.round(Math.random() * 9) + 1;
+			}
+			else
+			{
+				r = Math.round(Math.random() * 6) + 1;
+			}
 				
 				//r = 9;
+				//difficulty = 5;
 				
 				//jump, then jump again
 				if (r == 1)
 				{
-					
-					createWall(FlxG.width + 100, 30, -200);
-					createWall(FlxG.width, 40, -200);
-					createWall(FlxG.width + 50, 40, -200);
+					if (firstJump && (!_player.dead))
+					{
+						jumpTimer = 1.8;
+						slideText.text = "[X] Jump!";
+						//createWall(FlxG.width + 100, 30, -200);
+						createWall(FlxG.width, 80, -200);
+						createWall(FlxG.width + 50, 80, -200);
+					}
+					else
+					{
+						createWall(FlxG.width + 100, 70, -200);
+						createWall(FlxG.width, 80, -200);
+						createWall(FlxG.width + 50, 80, -200);
+					}
 					
 					if ( (Math.round(Math.random() * 2) + 1) != 1 )
 					{
-						createPowerUp(FlxG.width + 140, 0, -200);
+						createPowerUp(FlxG.width + 140, 40, -200);
 					}
 					
 					resetObstacleTimer();
@@ -254,15 +333,25 @@ package
 				//slide, from the floor
 				else if (r == 2)
 				{
+					if (firstSlide && (!_player.dead))
+					{
+						slideTimer = 1.8;
+						slideText.text = "[Z] Slide!"
+					}
+						
 					createWall(FlxG.width, -4, -200);
 					createWall(FlxG.width, 4, -200);
 					createWall(FlxG.width, 14, -200);
 					createWall(FlxG.width, 24, -200);
 					createWall(FlxG.width, 34, -200);
+					createWall(FlxG.width, 44, -200);
+					createWall(FlxG.width, 54, -200);
+					createWall(FlxG.width, 64, -200);
+					createWall(FlxG.width, 74, -200);
 					
 					if ( (Math.round(Math.random() * 2) + 1) != 1 )
 					{
-						createPowerUp(FlxG.width + 75, 24, -200);
+						createPowerUp(FlxG.width + 75, 64, -200);
 					}
 					
 					resetObstacleTimer();
@@ -270,36 +359,81 @@ package
 				//jump and then slide
 				else if (r == 3)
 				{
-					createWall(FlxG.width + 100, -4, -200);
-					createWall(FlxG.width + 100, 4, -200);
-					createWall(FlxG.width + 100, 14, -200);
-					createWall(FlxG.width + 100, 24, -200);
-					
-					if ( (Math.round(Math.random() * 5) + 1) == 1 )
+					if (firstSlide && (!_player.dead))
 					{
-						createPowerUp(FlxG.width + 120, 40, -200);
+						slideTimer = 1.8;
+						slideText.text = "[Z] Slide!"
+								
+						createWall(FlxG.width, -4, -200);
+						createWall(FlxG.width, 4, -200);
+						createWall(FlxG.width, 14, -200);
+						createWall(FlxG.width, 24, -200);
+						createWall(FlxG.width, 34, -200);
+						createWall(FlxG.width, 44, -200);
+						createWall(FlxG.width, 54, -200);
+						createWall(FlxG.width, 64, -200);
+						createWall(FlxG.width, 74, -200);
+						
+						if ( (Math.round(Math.random() * 2) + 1) != 1 )
+						{
+							createPowerUp(FlxG.width + 75, 64, -200);
+						}
+					}
+					else
+					{
+						if (firstJump && (!_player.dead))
+						{
+							jumpTimer = 1.8;
+							slideText.text = "[X] Jump!";
+						}
+						if (difficulty > 0)
+						{
+							createWall(FlxG.width + 100, -4, -200);
+							createWall(FlxG.width + 100, 4, -200);
+							createWall(FlxG.width + 100, 14, -200);
+							createWall(FlxG.width + 100, 24, -200);
+							createWall(FlxG.width + 100, 34, -200);
+							createWall(FlxG.width + 100, 44, -200);
+							createWall(FlxG.width + 100, 54, -200);
+							createWall(FlxG.width + 100, 64, -200);
+						}
+						
+						if ( (Math.round(Math.random() * 5) + 1) == 1 )
+						{
+							createPowerUp(FlxG.width + 120, 80, -200);
+						}
+						
+						createWall(FlxG.width, 80, -200);
+						createWall(FlxG.width + 50, 80, -200);
 					}
 					
-					createWall(FlxG.width, 40, -200);
-					createWall(FlxG.width + 50, 40, -200);
 					resetObstacleTimer();
 				}
 				//slide or jump
 				else if (r == 4)
 				{
-					createWall(FlxG.width, 34, -200);
-					createWall(FlxG.width + 50, 24, -200);
-					
-					if ( (Math.round(Math.random() * 3) + 1) != 1 )
+					if (firstJump && (!_player.dead))
 					{
-						if ( (Math.round(Math.random() * 2) + 1) !== 1 )
+						jumpTimer = 1.8;
+						slideText.text = "[X] Jump!";
+						createWall(FlxG.width, 74, -200);
+					}
+					else
+					{
+						createWall(FlxG.width, 74, -200);
+						createWall(FlxG.width + 50, 64, -200);
+						
+						if ( (Math.round(Math.random() * 3) + 1) != 1 )
 						{
-							createPowerUp(FlxG.width + 70, 34, -200);
-							createWall(FlxG.width + 100, 34, -200);
-						}
-						else
-						{
-							createPowerUp(FlxG.width + 80, 10, -200);
+							if ((difficulty > 1) &&((Math.round(Math.random() * 2) + 1) !== 1))
+							{
+								createPowerUp(FlxG.width + 70, 74, -200);
+								createWall(FlxG.width + 100, 74, -200);
+							}
+							else
+							{
+								createPowerUp(FlxG.width + 80, 50, -200);
+							}
 						}
 					}
 					
@@ -308,21 +442,38 @@ package
 				//jump wall slide spikes
 				else if (r == 5)
 				{
-					createWall(FlxG.width, 40, -200);
-					createWall(FlxG.width, 30, -200);
+					if (firstJump && (!_player.dead))
+					{
+						jumpTimer = 1.8;
+						slideText.text = "[X] Jump!";
+					}
+					createWall(FlxG.width, 80, -200);
+					createWall(FlxG.width, 70, -200);
 					
 					if ( (Math.round(Math.random() * 3) + 1) != 1 )
 					{
-						createPowerUp(FlxG.width + 130, 20, -200);
+						createPowerUp(FlxG.width + 130, 60, -200);
 					}
 					
-					createTrap(FlxG.width + 80, 0, "hangSpike", -200);
-					createTrap(FlxG.width + 90, 0, "hangSpike", -200);
-					
-					if ( (Math.round(Math.random() * 2) + 1) == 1 )
+					if (difficulty > 1)
 					{
-						createTrap(FlxG.width + 100, 0, "hangSpike", -200);
-						createTrap(FlxG.width + 110, 0, "hangSpike", -200);
+						if (firstSpikes && (!_player.dead))
+						{
+							spikeTimer = 1.8;
+							slideText.text = "[Z] Slide!"
+						}
+						createTrap(FlxG.width + 80, 0, "hangSpike", -200);
+						createTrap(FlxG.width + 90, 0, "hangSpike", -200);
+						if (firstSpikes && (!_player.dead))
+						{
+							spikeTimer = 1.8;
+							slideText.text = "[Z] Slide!"
+						}
+						if ( (Math.round(Math.random() * 2) + 1) == 1 )
+						{
+							createTrap(FlxG.width + 100, 0, "hangSpike", -200);
+							createTrap(FlxG.width + 110, 0, "hangSpike", -200);
+						}
 					}
 					
 					resetObstacleTimer();
@@ -330,29 +481,42 @@ package
 				//jump spikes
 				else if (r == 6)
 				{
-					createTrap(FlxG.width, 40, "spikeStrip", -200);
+					if (firstJump && (!_player.dead))
+					{
+						jumpTimer = 1.8;
+						slideText.text = "[X] Jump!";
+					}
+					createTrap(FlxG.width, 80, "spikeStrip", -200);
 					
 					if ( (Math.round(Math.random() * 3) + 1) == 1 )
 					{
-						createPowerUp(FlxG.width + 70, 40, -200);
+						createPowerUp(FlxG.width + 70, 80, -200);
 					}
 					
-					createTrap(FlxG.width + 100, 40, "spikeStrip", -200);
+					if (difficulty > 0)
+					{
+						createTrap(FlxG.width + 100, 80, "spikeStrip", -200);
+					}
 					
 					resetObstacleTimer();
 				}
 				//slide spikes
-				else if (r == 7)
+				else if ((difficulty > 0) && (r == 7))
 				{
+					if (firstSpikes && (!_player.dead))
+						{
+							spikeTimer = 1.8;
+							slideText.text = "[Z] Slide!"
+						}
 					createTrap(FlxG.width, 0, "hangSpike", -200);
 					createTrap(FlxG.width + 10, 0, "hangSpike", -200);
 					createTrap(FlxG.width + 20, 0, "hangSpike", -200);
 					
-					if ( (Math.round(Math.random() * 2) + 1) == 1 )
+					if ((difficulty > 1) && (((Math.round(Math.random() * 2) + 1) == 1)))
 					{
 						if ( (Math.round(Math.random() * 5) + 1) != 1 )
 						{
-							createPowerUp(FlxG.width + 50, 34, -200);
+							createPowerUp(FlxG.width + 50, 74, -200);
 						}
 						
 						createTrap(FlxG.width + 70, 0, "hangSpike", -200);
@@ -369,18 +533,26 @@ package
 					resetObstacleTimer();
 				}
 				//slide then jump
-				else if (r == 8)
+				else if ((r == 8))
 				{
+					if (firstSpikes && (!_player.dead))
+					{
+						spikeTimer= 1.8;
+						slideText.text = "[Z] Slide!"
+					}
 					createTrap(FlxG.width, 0, "hangSpike", -200);
 					createTrap(FlxG.width + 10, 0, "hangSpike", -200);
 					createTrap(FlxG.width + 20, 0, "hangSpike", -200);
 					createTrap(FlxG.width + 30, 0, "hangSpike", -200);
 					
-					createTrap(FlxG.width + 80, 40, "spikeStrip", -200);
+					if (difficulty > 1)
+					{
+					createTrap(FlxG.width + 80, 80, "spikeStrip", -200);
+					}
 					
 					if ( (Math.round(Math.random() * 4) + 1) == 1 )
 					{
-						createPowerUp(FlxG.width + 100, 20, -200);
+						createPowerUp(FlxG.width + 100, 60, -200);
 					}
 					
 					resetObstacleTimer();
@@ -388,18 +560,30 @@ package
 				//reverse of 8
 				else if (r == 9)
 				{
-					createTrap(FlxG.width, 40, "spikeStrip", -200);
+					createTrap(FlxG.width, 80, "spikeStrip", -200);
 					
-					createTrap(FlxG.width + 85, 0, "hangSpike", -200);
-					createTrap(FlxG.width + 95, 0, "hangSpike", -200);
-					createTrap(FlxG.width + 105, 0, "hangSpike", -200);
-					createTrap(FlxG.width + 115, 0, "hangSpike", -200);
+					if (difficulty > 1)
+					{
+						if (firstSpikes && (!_player.dead))
+						{
+							spikeTimer = 1.8;
+							slideText.text = "[Z] Slide!"
+						}
+						createTrap(FlxG.width + 85, 0, "hangSpike", -200);
+						createTrap(FlxG.width + 95, 0, "hangSpike", -200);
+						createTrap(FlxG.width + 105, 0, "hangSpike", -200);
+						createTrap(FlxG.width + 115, 0, "hangSpike", -200);
+					}
 					
 					if ( (Math.round(Math.random() * 3) + 1) == 1 )
 					{
-						createPowerUp(FlxG.width + 65, 40, -200);
+						createPowerUp(FlxG.width + 65, 80, -200);
 					}
 					
+					resetObstacleTimer();
+				}
+				else
+				{
 					resetObstacleTimer();
 				}
 		}
